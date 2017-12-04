@@ -1,0 +1,13 @@
+{
+  "name": "adventofcode2016",
+  "version": "0.0.1",
+  "main": "index.js",
+  "dependencies": {
+    "heap": "^0.2.6",
+    "lodash": "^4.17.2",
+    "md5": "^2.2.1",
+    "randomstring": "^1.1.5"
+  },
+  "devDependencies": {},
+  "author": "Dale Caffull <dcaffull@factset.com>"
+}
