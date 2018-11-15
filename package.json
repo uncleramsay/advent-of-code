@@ -1,18 +1,22 @@
 {
   "author": "Dale Caffull <dcaffull@factset.com>",
   "dependencies": {
-    "lodash": "^4.17.4"
+    "@types/lodash": "^4.14.118",
+    "@types/node": "^10.12.8",
+    "lodash": "^4.17.4",
+    "ts-node": "^7.0.1",
+    "typescript": "^3.1.6"
   },
   "devDependencies": {},
   "engines": {
-    "node": "^10.5.0"
+    "node": "^10.13.0"
   },
   "main": "index.js",
   "name": "advent-of-code",
   "private": true,
   "scripts": {
-    "aoc": "node bin/run.js",
-    "scaffold": "node bin/scaffold.js"
+    "aoc": "ts-node bin/run.ts",
+    "scaffold": "ts-node bin/scaffold.ts"
   },
   "version": "1.0.0"
 }
