@@ -9,7 +9,7 @@ const year = process.argv[2];
 const day = process.argv[3];
 const part = process.argv[4];
 
-const solutions = require(join(__dirname, `../${year}/${day}/solutions`));
+const solutions = require(join(__dirname, `../lib/${year}/${day}/solutions`));
 const solution = solutions[part]();
 
 console.log(`${year}-${day}-${part}: ${solution}`);
