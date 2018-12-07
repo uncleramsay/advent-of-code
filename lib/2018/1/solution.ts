@@ -32,7 +32,7 @@ class Solution {
   }
 
   public part2() {
-    while(true) {
+    while (true) {
       const output = this.processData(true);
       if (typeof output === 'number') {
         return output;

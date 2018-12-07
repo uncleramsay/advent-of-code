@@ -40,7 +40,7 @@ class Solution {
 
     for (let i = 0; i < lines.length; i++) {
       const line1 = lines[i];
-      const line2 = lines[i+1];
+      const line2 = lines[i + 1];
 
       const chars1 = line1.split('');
       const chars2 = line2.split('');
@@ -53,7 +53,9 @@ class Solution {
       }
 
       if (differences === 1) {
-        return chars1.filter((char: string, index: number) => char === chars2[index]).join('');
+        return chars1
+          .filter((char: string, index: number) => char === chars2[index])
+          .join('');
       }
     }
 
