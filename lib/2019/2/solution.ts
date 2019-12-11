@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import IntCodeComputer from './IntCodeComputer';
+import IntCodeComputer from '../IntCodeComputer';
 
 class Solution {
   private input: string;
@@ -16,16 +16,16 @@ class Solution {
     this.integers = this.input.split(',').map(input => parseInt(input, 10));
   }
 
-  public part1() {
-    this.computer.setInteger(1, 12);
-    this.computer.setInteger(2, 2);
+  public async part1(): Promise<string> {
+    this.computer.setMemoryValue(1, 12);
+    this.computer.setMemoryValue(2, 2);
 
-    this.computer.runProgram();
+    await this.computer.runProgram();
 
-    return this.computer.getInteger(0);
+    return `${this.computer.getMemoryValue(0)}`;
   }
 
-  public part2() {
+  public async part2(): Promise<string> {
     const resultToMatch = 19690720;
 
     for (let noun = 0; noun < 100; noun++) {
@@ -33,14 +33,13 @@ class Solution {
         console.log(`Attempting ${noun}, ${verb}`);
 
         this.computer.setMemory([...this.integers]);
-        this.computer.setInteger(1, noun);
-        this.computer.setInteger(2, verb);
+        this.computer.setMemoryValue(1, noun);
+        this.computer.setMemoryValue(2, verb);
 
-        this.computer.runProgram();
-
-        const result = this.computer.getInteger(0);
+        await this.computer.runProgram();
+        const result = this.computer.getMemoryValue(0);
         if (result === resultToMatch) {
-          return 100 * noun + verb;
+          return `${100 * noun + verb}`;
         }
 
         console.log(`Result is ${result}`);
@@ -48,7 +47,7 @@ class Solution {
       }
     }
 
-    return undefined;
+    throw "Couldn't find an answer";
   }
 }
 

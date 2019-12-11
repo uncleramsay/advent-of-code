@@ -10,15 +10,15 @@ import { join } from 'path';
   const day = process.argv[3];
   const part = process.argv[4];
 
-  const Solution = (await import(join(
-    __dirname,
-    `../lib/${year}/${day}/solution`,
-  ))).default;
+  const Solution = (
+    await import(join(__dirname, `../lib/${year}/${day}/solution`))
+  ).default;
 
   const solution = new Solution();
+  const result = await Promise.resolve(solution[`part${part}`]());
 
   console.log('');
   console.log(`==== ${year} Day ${day} Part ${part} Solution ====`);
-  console.log(solution[`part${part}`]());
+  console.log(result);
   console.log('');
 })();
