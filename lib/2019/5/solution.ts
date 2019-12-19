@@ -16,14 +16,16 @@ class Solution {
     this.integers = this.input.split(',').map(input => parseInt(input, 10));
   }
 
-  public async part1(): Promise<void> {
-    console.log('Provide "1" to the requested input');
+  public async part1(): Promise<number> {
+    this.computer.setInput(1);
     await this.computer.runProgram();
+    return this.computer.getOutput();
   }
 
-  public async part2(): Promise<void> {
-    console.log('Provide "5" to the requested input');
+  public async part2(): Promise<number> {
+    this.computer.setInput(5);
     await this.computer.runProgram();
+    return this.computer.getOutput();
   }
 }
 

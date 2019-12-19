@@ -1,5 +1,3 @@
-import { createInterface } from 'readline';
-
 export interface IOptions {
   debugMode: boolean;
 }
@@ -11,6 +9,7 @@ class Instruction {
   public constructor(
     private memory: number[],
     private instructionPointer: number,
+    private inputGetter: () => Promise<number>,
     private options?: IOptions,
   ) {
     const value = this.memory[this.instructionPointer];
@@ -25,6 +24,18 @@ class Instruction {
       .map((char: string) => parseInt(char, 10));
 
     this.prepareParameterModes();
+  }
+
+  private prepareParameterModes(): void {
+    if (this.parameterModes.length === this.parameterLength()) {
+      return;
+    }
+
+    const numMissingModes = this.parameterLength() - this.parameterModes.length;
+
+    for (let i = 0; i < numMissingModes; i++) {
+      this.parameterModes.push(0);
+    }
   }
 
   public parameterLength(): number {
@@ -56,8 +67,8 @@ class Instruction {
     }
   }
 
-  public execute(parameters: number[]): Promise<void> {
-    return new Promise((resolve, reject) => {
+  public async execute(parameters: number[]): Promise<void | number> {
+    return new Promise(async (resolve, reject) => {
       if (parameters.length !== this.parameterModes.length) {
         reject("Don't have assigned modes for all parameters");
       }
@@ -69,11 +80,15 @@ class Instruction {
 
           const left = this.getParamValue(leftAddress, leftMode);
           const right = this.getParamValue(rightAddress, rightMode);
+          const result = left + right;
 
           this.debugLog(
-            `opcode 1: ${left} + ${right} stored in ${resultAddress}`,
+            `opcode 1 addresses: ${leftAddress} + ${rightAddress} stored in ${resultAddress}`,
+            `opcode 1 results: ${left} + ${right} = ${result}`,
+            '',
           );
-          this.memory[resultAddress] = left + right;
+
+          this.memory[resultAddress] = result;
 
           resolve();
           break;
@@ -85,53 +100,57 @@ class Instruction {
 
           const left = this.getParamValue(leftAddress, leftMode);
           const right = this.getParamValue(rightAddress, rightMode);
+          const result = left * right;
 
           this.debugLog(
-            `opcode 2: ${left} * ${right} stored in ${resultAddress}`,
+            `opcode 2 addresses: ${leftAddress} * ${rightAddress} stored in ${resultAddress}`,
+            `opcode 2 results: ${left} * ${right} = ${result}`,
+            '',
           );
-          this.memory[resultAddress] = left * right;
+
+          this.memory[resultAddress] = result;
 
           resolve();
           break;
         }
 
         case 3: {
-          const readInterface = createInterface({
-            input: process.stdin,
-            output: process.stdout,
-          });
+          const [resultAddress] = parameters;
 
-          readInterface.question('Please provide input: ', (input: string) => {
-            if (!input) {
-              reject('opcode 3 requires input');
-            }
+          this.debugLog(`opcode 3: awaiting input`);
+          const input = await this.inputGetter();
 
-            const [resultAddress] = parameters;
+          this.debugLog(
+            `opcode 3: input found: ${input}`,
+            `opcode 3 results: ${input} stored in ${resultAddress}`,
+            '',
+          );
 
-            this.debugLog(`opcode 3: ${input} stored in ${resultAddress}`);
-            this.memory[resultAddress] = parseInt(input, 10);
+          this.memory[resultAddress] = input;
 
-            readInterface.close();
-            resolve();
-          });
-
+          resolve();
           break;
         }
 
         case 4: {
           const [resultAddress] = parameters;
           const [resultMode] = this.parameterModes;
-          this.debugLog(`opcode 4: sending output.`);
-          this.logOutput(`${this.getParamValue(resultAddress, resultMode)}`);
+          const output = this.getParamValue(resultAddress, resultMode);
 
-          resolve();
+          this.debugLog(
+            `opcode 4 addresses: getting value from ${resultAddress}`,
+            `opcode 4 results: outputting ${output}`,
+            '',
+          );
+
+          resolve(output);
           break;
         }
 
         case 5:
         case 6: {
           // These cases only affect the instruction pointer
-          this.debugLog(`opcode 5/6: skip`);
+          this.debugLog(`opcode 5/6: skip execution`, '');
           resolve();
           break;
         }
@@ -142,13 +161,15 @@ class Instruction {
 
           const left = this.getParamValue(leftAddress, leftMode);
           const right = this.getParamValue(rightAddress, rightMode);
+          const result = left < right ? 1 : 0;
 
           this.debugLog(
-            `opcode 7: ${left} < ${right} ? ${
-              left < right ? 1 : 0
-            } stored in ${resultAddress}`,
+            `opcode 7 addresses: ${leftAddress} < ${rightAddress} ? 1 : 0 stored in ${resultAddress}`,
+            `opcode 7 results: ${left} < ${right} = ${result}`,
+            '',
           );
-          this.memory[resultAddress] = left < right ? 1 : 0;
+
+          this.memory[resultAddress] = result;
 
           resolve();
           break;
@@ -160,13 +181,15 @@ class Instruction {
 
           const left = this.getParamValue(leftAddress, leftMode);
           const right = this.getParamValue(rightAddress, rightMode);
+          const result = left === right ? 1 : 0;
 
           this.debugLog(
-            `opcode 7: ${left} === ${right} ? ${
-              left === right ? 1 : 0
-            } stored in ${resultAddress}`,
+            `opcode 8 addresses: ${leftAddress} === ${rightAddress} ? 1 : 0 stored in ${resultAddress}`,
+            `opcode 8 results: ${left} === ${right} = ${result}`,
+            '',
           );
-          this.memory[resultAddress] = left === right ? 1 : 0;
+
+          this.memory[resultAddress] = result;
 
           resolve();
           break;
@@ -193,22 +216,36 @@ class Instruction {
     if (this.opcode === 5) {
       const [testAddress, resultAddress] = parameters;
       const [testMode, resultMode] = this.parameterModes;
-
       const test = this.getParamValue(testAddress, testMode);
+      const result = this.getParamValue(resultAddress, resultMode);
+
+      this.debugLog(`opcode 5 addresses: check ${resultAddress} === 0`);
 
       if (test !== 0) {
-        this.debugLog(`opcode 5: setting instruction pointer to ${test}`);
-        return this.getParamValue(resultAddress, resultMode);
+        this.debugLog(
+          `opcode 5 results: ${test} !== 0; setting instruction pointer to ${result}`,
+          '',
+        );
+        return result;
+      } else {
+        this.debugLog(`opcode 5 results: ${test} === 0; doing nothing`);
       }
     } else if (this.opcode === 6) {
       const [testAddress, resultAddress] = parameters;
       const [testMode, resultMode] = this.parameterModes;
-
       const test = this.getParamValue(testAddress, testMode);
+      const result = this.getParamValue(resultAddress, resultMode);
+
+      this.debugLog(`opcode 6 addresses: check ${resultAddress} === 0`);
 
       if (test === 0) {
-        this.debugLog(`opcode 6: setting instruction pointer to ${test}`);
-        return this.getParamValue(resultAddress, resultMode);
+        this.debugLog(
+          `opcode 6 results: ${test} === 0; setting instruction pointer to ${result}`,
+          '',
+        );
+        return result;
+      } else {
+        this.debugLog(`opcode 6 results: ${test} !== 0; doing nothing`);
       }
     }
 
@@ -216,24 +253,12 @@ class Instruction {
     const address =
       this.instructionPointer + opcodeLength + this.parameterLength();
 
-    this.debugLog(`setting instruction pointer to ${address}`);
+    this.debugLog(`setting instruction pointer to ${address}`, '');
     return address;
   }
 
   public isProgramFinished(): boolean {
     return this.opcode === 99;
-  }
-
-  private prepareParameterModes(): void {
-    if (this.parameterModes.length === this.parameterLength()) {
-      return;
-    }
-
-    const numMissingModes = this.parameterLength() - this.parameterModes.length;
-
-    for (let i = 0; i < numMissingModes; i++) {
-      this.parameterModes.push(0);
-    }
   }
 
   private getParamValue(param: number, mode: number): number {
@@ -244,19 +269,14 @@ class Instruction {
     return this.memory[param];
   }
 
-  private logOutput(output: string) {
-    console.log('== OUTPUT ==');
-    console.log(output);
-    console.log('============');
-    console.log();
-  }
-
-  private debugLog(output: string) {
+  private debugLog(output: string, ...additionalOutputs: string[]) {
     if (!this.options?.debugMode) {
       return;
     }
 
-    console.log(output);
+    for (const log of [output, ...additionalOutputs]) {
+      console.log(log);
+    }
   }
 }
 
