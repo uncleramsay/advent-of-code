@@ -23,6 +23,7 @@ class Solution {
   }
 
   public async part2(): Promise<number> {
+    this.computer.setMemory([...this.integers]); // Reset memory after part 1
     this.computer.setInput(5);
     await this.computer.runProgram();
     return this.computer.getOutput();

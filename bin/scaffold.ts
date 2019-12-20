@@ -18,4 +18,11 @@ writeFileSync(
   readFileSync(join(__dirname, 'solution.tpl')),
 );
 
+writeFileSync(
+  `${path}/solution.spec.ts`,
+  readFileSync(join(__dirname, 'solution.spec.tpl'), { encoding: 'utf8' })
+    .replace('$$YEAR$$', year)
+    .replace('$$DAY$$', day),
+);
+
 writeFileSync(`${path}/data.txt`, '');

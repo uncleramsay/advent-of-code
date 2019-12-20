@@ -16,16 +16,16 @@ class Solution {
     this.integers = this.input.split(',').map(input => parseInt(input, 10));
   }
 
-  public async part1(): Promise<string> {
+  public async part1(): Promise<number> {
     this.computer.setMemoryValue(1, 12);
     this.computer.setMemoryValue(2, 2);
 
     await this.computer.runProgram();
 
-    return `${this.computer.getMemoryValue(0)}`;
+    return this.computer.getMemoryValue(0);
   }
 
-  public async part2(): Promise<string> {
+  public async part2(): Promise<number> {
     const resultToMatch = 19690720;
 
     for (let noun = 0; noun < 100; noun++) {
@@ -39,7 +39,7 @@ class Solution {
         await this.computer.runProgram();
         const result = this.computer.getMemoryValue(0);
         if (result === resultToMatch) {
-          return `${100 * noun + verb}`;
+          return 100 * noun + verb;
         }
 
         console.log(`Result is ${result}`);
