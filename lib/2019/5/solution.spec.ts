@@ -7,10 +7,10 @@ describe('2019 Day 5', () => {
     solution = new Solution();
   });
 
-  // it('should pass part 1', async () => {
-  //   const answer = await Promise.resolve(solution.part1());
-  //   expect(answer).toBe(3122865);
-  // });
+  it('should pass part 1', async () => {
+    const answer = await Promise.resolve(solution.part1());
+    expect(answer).toBe(3122865);
+  });
 
   it('should pass part 2', async () => {
     const answer = await Promise.resolve(solution.part2());
