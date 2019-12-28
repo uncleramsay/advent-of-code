@@ -10,9 +10,10 @@ class Instruction {
     private memory: number[],
     private instructionPointer: number,
     private inputGetter: () => Promise<number>,
+    private relativeBase: number,
     private options?: IOptions,
   ) {
-    const value = this.memory[this.instructionPointer];
+    const value = this.getParamValue(this.instructionPointer, 0);
     const stringVal = `${value}`;
 
     this.opcode = parseInt(stringVal.substr(-2), 10);
@@ -48,7 +49,8 @@ class Instruction {
       }
 
       case 3:
-      case 4: {
+      case 4:
+      case 9: {
         return 1;
       }
 
@@ -76,7 +78,7 @@ class Instruction {
       switch (this.opcode) {
         case 1: {
           const [leftAddress, rightAddress, resultAddress] = parameters;
-          const [leftMode, rightMode] = this.parameterModes;
+          const [leftMode, rightMode, resultMode] = this.parameterModes;
 
           const left = this.getParamValue(leftAddress, leftMode);
           const right = this.getParamValue(rightAddress, rightMode);
@@ -88,7 +90,7 @@ class Instruction {
             '',
           );
 
-          this.memory[resultAddress] = result;
+          this.setAddressValue(resultAddress, resultMode, result);
 
           resolve();
           break;
@@ -96,7 +98,7 @@ class Instruction {
 
         case 2: {
           const [leftAddress, rightAddress, resultAddress] = parameters;
-          const [leftMode, rightMode] = this.parameterModes;
+          const [leftMode, rightMode, resultMode] = this.parameterModes;
 
           const left = this.getParamValue(leftAddress, leftMode);
           const right = this.getParamValue(rightAddress, rightMode);
@@ -108,14 +110,15 @@ class Instruction {
             '',
           );
 
-          this.memory[resultAddress] = result;
+          this.setAddressValue(resultAddress, resultMode, result);
 
           resolve();
           break;
         }
 
         case 3: {
-          const [resultAddress] = parameters;
+          let [resultAddress] = parameters;
+          const [resultMode] = this.parameterModes;
 
           this.debugLog(`opcode 3: awaiting input`);
           const input = await this.inputGetter();
@@ -126,7 +129,7 @@ class Instruction {
             '',
           );
 
-          this.memory[resultAddress] = input;
+          this.setAddressValue(resultAddress, resultMode, input);
 
           resolve();
           break;
@@ -157,7 +160,7 @@ class Instruction {
 
         case 7: {
           const [leftAddress, rightAddress, resultAddress] = parameters;
-          const [leftMode, rightMode] = this.parameterModes;
+          const [leftMode, rightMode, resultMode] = this.parameterModes;
 
           const left = this.getParamValue(leftAddress, leftMode);
           const right = this.getParamValue(rightAddress, rightMode);
@@ -169,7 +172,7 @@ class Instruction {
             '',
           );
 
-          this.memory[resultAddress] = result;
+          this.setAddressValue(resultAddress, resultMode, result);
 
           resolve();
           break;
@@ -177,7 +180,7 @@ class Instruction {
 
         case 8: {
           const [leftAddress, rightAddress, resultAddress] = parameters;
-          const [leftMode, rightMode] = this.parameterModes;
+          const [leftMode, rightMode, resultMode] = this.parameterModes;
 
           const left = this.getParamValue(leftAddress, leftMode);
           const right = this.getParamValue(rightAddress, rightMode);
@@ -189,8 +192,25 @@ class Instruction {
             '',
           );
 
-          this.memory[resultAddress] = result;
+          this.setAddressValue(resultAddress, resultMode, result);
 
+          resolve();
+          break;
+        }
+
+        case 9: {
+          const [address] = parameters;
+          const [mode] = this.parameterModes;
+
+          const value = this.getParamValue(address, mode);
+
+          this.debugLog(
+            `opcode 9 address: ${address}`,
+            `opcode 9 results: ${value}`,
+            '',
+          );
+
+          this.relativeBase += value;
           resolve();
           break;
         }
@@ -257,16 +277,34 @@ class Instruction {
     return address;
   }
 
+  public getRelativeBase(): number {
+    return this.relativeBase;
+  }
+
   public isProgramFinished(): boolean {
     return this.opcode === 99;
   }
 
   private getParamValue(param: number, mode: number): number {
+    let rval: number = 0;
+
     if (mode === 1) {
-      return param;
+      rval = param;
+    } else if (mode === 2) {
+      rval = this.memory[param + this.relativeBase];
+    } else {
+      rval = this.memory[param];
     }
 
-    return this.memory[param];
+    return rval || 0;
+  }
+
+  private setAddressValue(address: number, mode: number, value: number): void {
+    if (mode === 2) {
+      address += this.relativeBase;
+    }
+
+    this.memory[address] = value;
   }
 
   private debugLog(output: string, ...additionalOutputs: string[]) {

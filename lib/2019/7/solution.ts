@@ -56,29 +56,29 @@ class Solution {
 
       const amplifierB = new IntCodeComputer([...this.integers]);
       amplifierB.setInput(phaseSequence[1]);
-      amplifierB.setInput(amplifierA.getOutput());
+      amplifierB.setInput(amplifierA.getLastOutput());
       amplifierB.runProgram();
       await this.runDownEventLoop();
 
       const amplifierC = new IntCodeComputer([...this.integers]);
       amplifierC.setInput(phaseSequence[2]);
-      amplifierC.setInput(amplifierB.getOutput());
+      amplifierC.setInput(amplifierB.getLastOutput());
       amplifierC.runProgram();
       await this.runDownEventLoop();
 
       const amplifierD = new IntCodeComputer([...this.integers]);
       amplifierD.setInput(phaseSequence[3]);
-      amplifierD.setInput(amplifierC.getOutput());
+      amplifierD.setInput(amplifierC.getLastOutput());
       amplifierD.runProgram();
       await this.runDownEventLoop();
 
       const amplifierE = new IntCodeComputer([...this.integers]);
       amplifierE.setInput(phaseSequence[4]);
-      amplifierE.setInput(amplifierD.getOutput());
+      amplifierE.setInput(amplifierD.getLastOutput());
       amplifierE.runProgram();
       await this.runDownEventLoop();
 
-      const output = amplifierE.getOutput();
+      const output = amplifierE.getLastOutput();
 
       console.log('Output:', output);
       console.log();
@@ -129,22 +129,22 @@ class Solution {
         amplifierA.setInput(startInput);
         await this.runDownEventLoop();
 
-        amplifierB.setInput(amplifierA.getOutput());
+        amplifierB.setInput(amplifierA.getLastOutput());
         await this.runDownEventLoop();
 
-        amplifierC.setInput(amplifierB.getOutput());
+        amplifierC.setInput(amplifierB.getLastOutput());
         await this.runDownEventLoop();
 
-        amplifierD.setInput(amplifierC.getOutput());
+        amplifierD.setInput(amplifierC.getLastOutput());
         await this.runDownEventLoop();
 
-        amplifierE.setInput(amplifierD.getOutput());
+        amplifierE.setInput(amplifierD.getLastOutput());
         await this.runDownEventLoop();
 
-        startInput = amplifierE.getOutput();
+        startInput = amplifierE.getLastOutput();
       }
 
-      const output = amplifierE.getOutput();
+      const output = amplifierE.getLastOutput();
 
       console.log('Output:', output);
       console.log();

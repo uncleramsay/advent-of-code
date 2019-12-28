@@ -9,8 +9,9 @@ interface IInput {
 
 class IntCodeComputer {
   private inputs: IInput[];
-  private output: number;
+  private output: number[] = [];
   private finished: boolean = false;
+  private relativeBase: number = 0;
 
   public constructor(private memory: number[], private options?: IOptions) {
     this.setMemory(memory);
@@ -22,7 +23,7 @@ class IntCodeComputer {
   }
 
   public getMemoryValue(address: number): number {
-    return this.memory[address];
+    return this.memory[address] || 0;
   }
 
   public setMemoryValue(address: number, value: number): void {
@@ -70,8 +71,12 @@ class IntCodeComputer {
     });
   }
 
-  public getOutput(): number {
+  public getOutput(): number[] {
     return this.output;
+  }
+
+  public getLastOutput(): number {
+    return this.output[this.output.length - 1];
   }
 
   public async runProgram(): Promise<void> {
@@ -83,6 +88,7 @@ class IntCodeComputer {
         this.memory,
         instructionPointer,
         this.getInput.bind(this),
+        this.relativeBase,
         this.options,
       );
 
@@ -93,7 +99,7 @@ class IntCodeComputer {
 
       const output = await instruction.execute(parameters);
       if (output !== undefined) {
-        this.output = output;
+        this.output.push(output);
       }
 
       if (instruction.isProgramFinished()) {
@@ -102,6 +108,7 @@ class IntCodeComputer {
       }
 
       instructionPointer = instruction.getNextInstructionAddress(parameters);
+      this.relativeBase = instruction.getRelativeBase();
     }
   }
 
