@@ -1,52 +1,52 @@
 import { readFileSync } from 'fs';
-import { isUndefined } from 'lodash';
-
-interface IData {
-  basementEntry?: number;
-  down: number;
-  up: number;
-}
 
 class Solution {
-  private data: IData;
   private input: string;
+  private instructions: string[];
 
   constructor() {
-    this.data = {
-      down: 0,
-      up: 0,
-    };
-
     this.input = readFileSync(`${__dirname}/data.txt`, 'utf8').trim();
     this.processData();
   }
 
   private processData(): void {
-    for (let i = 0; i < this.input.length; i++) {
-      const char = this.input[i];
+    this.instructions = this.input.split('');
+  }
 
-      if (char === '(') {
-        this.data.up += 1;
-      } else if (char === ')') {
-        this.data.down += 1;
-      }
+  public part1(): number {
+    let floor = 0;
 
-      if (isUndefined(this.data.basementEntry) && this.getFinalFloor() < 0) {
-        this.data.basementEntry = i + 1;
+    for (const instruction of this.instructions) {
+      if (instruction === '(') {
+        floor += 1;
+      } else if (instruction === ')') {
+        floor -= 1;
+      } else {
+        throw `Couldn't understand instruction ${instruction}`;
       }
     }
-  }
 
-  private getFinalFloor(): number {
-    return this.data.up - this.data.down;
-  }
-
-  public part1() {
-    return this.getFinalFloor();
+    return floor;
   }
 
   public part2() {
-    return this.data.basementEntry;
+    let floor = 0;
+
+    for (const [index, instruction] of Object.entries(this.instructions)) {
+      if (instruction === '(') {
+        floor += 1;
+      } else if (instruction === ')') {
+        floor -= 1;
+      } else {
+        throw `Couldn't understand instruction ${instruction}`;
+      }
+
+      if (floor < 0) {
+        return parseInt(index, 10) + 1;
+      }
+    }
+
+    throw `Never entered the basement`;
   }
 }
 
