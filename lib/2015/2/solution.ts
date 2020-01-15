@@ -1,55 +1,59 @@
 import { readFileSync } from 'fs';
-import { tail } from 'lodash';
 
-interface IData {
-  paper: number;
-  ribbon: number;
+interface IBox {
+  height: number;
+  length: number;
+  width: number;
 }
 
 class Solution {
-  private data: IData;
   private input: string;
+  private boxes: IBox[];
 
   constructor() {
-    this.data = {
-      paper: 0,
-      ribbon: 0,
-    };
     this.input = readFileSync(`${__dirname}/data.txt`, 'utf8').trim();
     this.processData();
   }
 
   private processData(): void {
-    const lines = this.input.split('\n');
-    lines.forEach(line => {
-      const matches = line.match(/^(\d+)x(\d+)x(\d+)$/);
-      if (!matches) {
-        console.error(`Couldn't parse line: ${line}`);
-      }
-
-      const sides = tail(matches)
-        .map((side: string) => parseInt(side, 10))
-        .sort((a: number, b: number) => a - b);
-
-      const [l, w, h] = sides; // Order doesn't make any difference
-
-      const surface = 2 * l * w + 2 * w * h + 2 * h * l;
-      const slack = l * w; // Sorted, so guaranteed to be smallest side
-
-      const ribbon = 2 * l + 2 * w;
-      const bow = l * w * h;
-
-      this.data.paper += surface + slack;
-      this.data.ribbon += ribbon + bow;
+    this.boxes = this.input.split('\n').map(line => {
+      const [length, width, height] = line
+        .split('x')
+        .map(dimension => parseInt(dimension, 10));
+      return { length, width, height };
     });
   }
 
-  public part1() {
-    return this.data.paper;
+  public part1(): number {
+    let totalPaper = 0;
+
+    for (const box of this.boxes) {
+      const areas = [
+        box.length * box.width,
+        box.width * box.height,
+        box.height * box.length,
+      ];
+
+      totalPaper +=
+        areas.reduce((acc, area) => acc + area) * 2 + Math.min(...areas);
+    }
+
+    return totalPaper;
   }
 
   public part2() {
-    return this.data.ribbon;
+    let totalRibbon = 0;
+
+    for (const box of this.boxes) {
+      const dimensions = Object.values(box).sort((a, b) => a - b);
+
+      totalRibbon += (dimensions[0] + dimensions[1]) * 2;
+      totalRibbon += Object.values(box).reduce(
+        (acc, dimension) => acc * dimension,
+      );
+    }
+
+    return totalRibbon;
   }
 }
 
