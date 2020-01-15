@@ -1,89 +1,120 @@
 import { readFileSync } from 'fs';
-import { set } from 'lodash';
 
-interface IData {
-  robotX: number;
-  robotY: number;
-  santaX: number;
-  santaY: number;
-  visitedCells: Record<number, number>;
-}
+type Instruction = '^' | 'v' | '>' | '<';
 
 class Solution {
-  private data: IData;
   private input: string;
+  private instructions: Instruction[];
+  private map: Record<string, number> = {};
 
   constructor() {
     this.input = readFileSync(`${__dirname}/data.txt`, 'utf8').trim();
+    this.processData();
   }
 
-  private processData(enableRobot: boolean = false): void {
-    this.data = {
-      robotX: 0,
-      robotY: 0,
-      santaX: 0,
-      santaY: 0,
-      visitedCells: {},
-    };
+  private processData(): void {
+    this.instructions = this.input.split('') as Instruction[];
+  }
 
-    for (let i = 0; i < this.input.length; i++) {
-      const char = this.input[i];
-      const isRobot = enableRobot && i % 2 !== 0;
+  public part1(): number {
+    let x = 0;
+    let y = 0;
 
-      switch (char) {
+    this.map = { '0,0': 1 };
+
+    for (const instruction of this.instructions) {
+      switch (instruction) {
         case '^': {
-          const prop = isRobot ? 'robotY' : 'santaY';
-          this.data[prop] += 1;
-          break;
-        }
-
-        case '>': {
-          const prop = isRobot ? 'robotX' : 'santaX';
-          this.data[prop] += 1;
+          y += 1;
           break;
         }
 
         case 'v': {
-          const prop = isRobot ? 'robotY' : 'santaY';
-          this.data[prop] -= 1;
+          y -= 1;
+          break;
+        }
+
+        case '>': {
+          x += 1;
           break;
         }
 
         case '<': {
-          const prop = isRobot ? 'robotX' : 'santaX';
-          this.data[prop] -= 1;
+          x -= 1;
           break;
+        }
+
+        default: {
+          throw `Couldn't understand instruction ${instruction}`;
         }
       }
 
-      this.markLocation(isRobot);
-    }
-  }
-
-  private markLocation(isRobot: boolean) {
-    const x = isRobot ? this.data.robotX : this.data.santaX;
-    const y = isRobot ? this.data.robotY : this.data.santaY;
-
-    set(this.data, ['visitedCells', x, y], true);
-  }
-
-  private countVisitedCells(): number {
-    let count = 0;
-    for (const x in this.data.visitedCells) {
-      count += Object.keys(this.data.visitedCells[x]).length;
+      const key = `${x},${y}`;
+      this.map[key] = this.map[key] ? this.map[key] + 1 : 1;
     }
 
-    return count;
-  }
-
-  public part1() {
-    this.processData();
-    return this.countVisitedCells();
+    return Object.keys(this.map).length;
   }
 
   public part2() {
-    this.processData(true);
-    return this.countVisitedCells();
+    let santaX = 0;
+    let santaY = 0;
+    let roboX = 0;
+    let roboY = 0;
+
+    this.map = { '0,0': 2 };
+
+    for (let index = 0; index < this.instructions.length; index++) {
+      const instruction = this.instructions[index];
+      const isSanta = index % 2 === 0;
+
+      switch (instruction) {
+        case '^': {
+          if (isSanta) {
+            santaY += 1;
+          } else {
+            roboY += 1;
+          }
+          break;
+        }
+
+        case 'v': {
+          if (isSanta) {
+            santaY -= 1;
+          } else {
+            roboY -= 1;
+          }
+          break;
+        }
+
+        case '>': {
+          if (isSanta) {
+            santaX += 1;
+          } else {
+            roboX += 1;
+          }
+          break;
+        }
+
+        case '<': {
+          if (isSanta) {
+            santaX -= 1;
+          } else {
+            roboX -= 1;
+          }
+          break;
+        }
+
+        default: {
+          throw `Couldn't understand instruction ${instruction}`;
+        }
+      }
+
+      const key = isSanta ? `${santaX},${santaY}` : `${roboX},${roboY}`;
+      this.map[key] = this.map[key] ? this.map[key] + 1 : 1;
+    }
+
+    return Object.keys(this.map).length;
   }
 }
 
