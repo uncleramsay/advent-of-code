@@ -1,36 +1,24 @@
 import { readFileSync } from 'fs';
 import * as md5 from 'md5';
-import { clearLine, cursorTo } from 'readline';
-
-const LOG_INTERVAL = 1000;
 
 class Solution {
   private input: string;
 
   constructor() {
     this.input = readFileSync(`${__dirname}/data.txt`, 'utf8').trim();
+    this.processData();
   }
 
-  private log(i: number) {
-    clearLine(process.stdout, 0);
-    cursorTo(process.stdout, 0);
-    process.stdout.write(`${i}`);
-  }
+  private processData(): void {}
 
-  private calculateHash(i: number): string {
-    if (i % LOG_INTERVAL === 0) {
-      this.log(i);
-    }
-
-    return md5(`${this.input}${i}`);
-  }
-
-  private performLoop(numZeros: number): number {
-    let i = 1;
+  private findHashIndex(numZeroes: number): number {
+    let i = 0;
     while (true) {
-      const hash = this.calculateHash(i);
-      if (new RegExp(`^0{${numZeros}}`).test(hash)) {
-        clearLine(process.stdout, 0);
+      const key = `${this.input}${i}`;
+      const hash = md5(key);
+
+      const regex = new RegExp(`^0{${numZeroes}}`);
+      if (regex.test(hash)) {
         return i;
       }
 
@@ -38,12 +26,12 @@ class Solution {
     }
   }
 
-  public part1() {
-    return this.performLoop(5);
+  public part1(): number {
+    return this.findHashIndex(5);
   }
 
   public part2() {
-    return this.performLoop(6);
+    return this.findHashIndex(6);
   }
 }
 
