@@ -1,85 +1,69 @@
 import { readFileSync } from 'fs';
 
-interface IData {
-  naughty: string[];
-  nice: string[];
-}
-
 class Solution {
-  private data: IData;
   private input: string;
+  private words: string[];
 
   constructor() {
-    this.data = {
-      naughty: [],
-      nice: [],
-    };
     this.input = readFileSync(`${__dirname}/data.txt`, 'utf8').trim();
+    this.processData();
   }
 
-  private runPartOneTests(line: string): boolean {
+  private processData(): void {
+    this.words = this.input.split('\n');
+  }
+
+  private has3Vowels(word: string): boolean {
+    return /.*[aeiou].*[aeiou].*[aeiou].*/.test(word);
+  }
+
+  private hasRepeatedLetter(word: string): boolean {
+    return /(.)\1/.test(word);
+  }
+
+  private hasForbiddenString(word: string): boolean {
     return (
-      this.testVowels(line) &&
-      this.testRepeatedCharacter(line) &&
-      this.testBlocklist(line)
+      word.includes('ab') ||
+      word.includes('cd') ||
+      word.includes('pq') ||
+      word.includes('xy')
     );
   }
 
-  private runPartTwoTests(line: string): boolean {
-    return this.testRepeatedPart(line) && this.testSandwich(line);
+  private hasRepeatedPair(word: string): boolean {
+    return /(..).*\1/.test(word);
   }
 
-  private testVowels(line: string): boolean {
-    const matches = line.match(/(a|e|i|o|u)/g);
-    return matches ? matches.length >= 3 : false;
-  }
-
-  private testRepeatedCharacter(line: string): boolean {
-    const matches = line.match(/(.)\1/g);
-    return matches ? !!matches.length : false;
-  }
-
-  private testBlocklist(line: string): boolean {
-    const blacklist = ['ab', 'cd', 'pq', 'xy'];
-    for (let i = 0; i < blacklist.length; i++) {
-      const entry = blacklist[i];
-      if (new RegExp(entry).test(line)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  private testRepeatedPart(line: string) {
-    const matches = line.match(/(..).*\1/g);
-    return matches ? !!matches.length : false;
-  }
-
-  private testSandwich(line: string) {
-    const matches = line.match(/(.).\1/g);
-    return matches ? !!matches.length : false;
-  }
-
-  private processData(testFn: (line: string) => boolean) {
-    const lines = this.input.split('\n');
-    lines.forEach((line: string) => {
-      if (testFn.call(this, line)) {
-        this.data.nice.push(line);
-      } else {
-        this.data.naughty.push(line);
-      }
-    });
+  private hasRepeatedSeparatedLetter(word: string): boolean {
+    return /(.).\1/.test(word);
   }
 
   public part1() {
-    this.processData(this.runPartOneTests);
-    return this.data.nice.length;
+    let count = 0;
+
+    for (const word of this.words) {
+      if (
+        this.has3Vowels(word) &&
+        this.hasRepeatedLetter(word) &&
+        !this.hasForbiddenString(word)
+      ) {
+        count += 1;
+      }
+    }
+
+    return count;
   }
 
   public part2() {
-    this.processData(this.runPartTwoTests);
-    return this.data.nice.length;
+    let count = 0;
+
+    for (const word of this.words) {
+      if (this.hasRepeatedPair(word) && this.hasRepeatedSeparatedLetter(word)) {
+        count += 1;
+      }
+    }
+
+    return count;
   }
 }
 
