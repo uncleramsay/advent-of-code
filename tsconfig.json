@@ -9,6 +9,7 @@
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "strictNullChecks": true,
+    "target": "ES5",
     "typeRoots": ["node_modules/@types"]
   }
 }
