@@ -5,7 +5,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "jsx": "react",
-    "lib": ["es2017", "scripthost"],
+    "lib": ["es2019", "scripthost"],
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "strictNullChecks": true,
